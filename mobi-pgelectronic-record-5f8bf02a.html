@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pg模拟器 · 信息卡片式索引页</title>
+    <style>
+        /* 全局重置 & 暖色渐变背景 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(145deg, #fdefd4 0%, #f8d5b0 100%);
+            min-height: 100vh;
+            padding: 2rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* 卡片系统 —— 主推白色圆角卡片、柔和阴影 */
+        .card {
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 2rem 2.2rem;
+            box-shadow: 0 20px 40px -12px rgba(180, 110, 50, 0.18), 0 10px 20px -6px rgba(160, 90, 40, 0.10);
+            transition: transform 0.25s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 28px 48px -14px rgba(150, 80, 30, 0.25);
+        }
+
+        /* 网格布局 */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.8rem;
+            margin: 2.2rem 0;
+        }
+
+        @media (min-width: 640px) {
+            .grid-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .grid-cards {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        /* hero区域 — 采用更宽的单卡片 */
+        .hero-card {
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 2.8rem 2.2rem;
+            box-shadow: 0 24px 48px -16px rgba(170, 95, 40, 0.20);
+            margin-bottom: 1.8rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: -60%;
+            right: -30%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,200,140,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-title {
+            font-size: 2.4rem;
+            font-weight: 620;
+            letter-spacing: -0.02em;
+            color: #3e2818;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .hero-title span {
+            background: linear-gradient(145deg, #b5652e, #8f4b20);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-sub {
+            font-size: 1.1rem;
+            color: #5e4030;
+            max-width: 680px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* 卡片内部标题 */
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #3b261a;
+            letter-spacing: -0.01em;
+            margin-bottom: 1rem;
+            border-left: 5px solid #e2965a;
+            padding-left: 16px;
+        }
+
+        .card-text {
+            color: #3f2f24;
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        .card-text a {
+            color: #b15a2c;
+            text-decoration: none;
+            font-weight: 550;
+            border-bottom: 2px solid rgba(207, 127, 60, 0.35);
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .card-text a:hover {
+            border-bottom-color: #b15a2c;
+            color: #7e401e;
+        }
+
+        /* 圆角按钮感的链接（单独使用时） */
+        .btn-link {
+            display: inline-block;
+            background: #f8ede0;
+            color: #4d2f1d;
+            padding: 0.5rem 1.5rem;
+            border-radius: 60px;
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 0.95rem;
+            border: 1px solid #e1c8b0;
+            box-shadow: 0 2px 6px rgba(160, 90, 40, 0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+            margin: 0.3rem 0.2rem;
+        }
+
+        .btn-link:hover {
+            background: #e8d5c0;
+            box-shadow: 0 6px 14px rgba(140, 75, 30, 0.15);
+            transform: scale(1.02);
+        }
+
+        .btn-link i {
+            font-style: normal;
+            margin-right: 4px;
+        }
+
+        /* 分隔修饰 */
+        .spacer {
+            height: 0.8rem;
+        }
+
+        .footnote {
+            margin-top: 2.4rem;
+            text-align: center;
+            color: #5c4636;
+            font-size: 0.9rem;
+            padding: 0 0.5rem;
+            background: rgba(255, 245, 235, 0.55);
+            backdrop-filter: blur(2px);
+            border-radius: 60px;
+            padding: 0.8rem 1.2rem;
+            display: inline-block;
+            width: auto;
+        }
+
+        .footnote a {
+            color: #96552c;
+            text-decoration: underline dotted 1px;
+            font-weight: 500;
+        }
+
+        .footnote a:hover {
+            text-decoration: underline solid;
+        }
+
+        /* 小标签 flex */
+        .tag-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 0.8rem;
+            margin-top: 1.2rem;
+        }
+
+        .tag {
+            background: #f3e4d8;
+            border-radius: 40px;
+            padding: 0.2rem 1rem;
+            font-size: 0.85rem;
+            color: #493729;
+            font-weight: 470;
+        }
+
+        /* 响应式微调 */
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            .card {
+                padding: 1.6rem;
+            }
+            .hero-card {
+                padding: 1.8rem 1.4rem;
+            }
+            .card-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-container">
+
+    <!-- hero 信息卡片 — 主视觉 -->
+    <div class="hero-card">
+        <h1 class="hero-title">📇 资料窗口 · <span>pg模拟器</span></h1>
+        <p class="hero-sub">
+            从信息整理与索引的角度，梳理关于 pg模拟器 的关键特征、实用场景以及适合人群。
+            这里不是泛泛罗列，而是一份有承接的卡片式知识速览。
+        </p>
+        <div class="tag-group">
+            <span class="tag">📋 索引型内容</span>
+            <span class="tag">🧩 用途卡片</span>
+            <span class="tag">👥 受众参考</span>
+        </div>
+    </div>
+
+    <!-- 卡片网格：三组信息卡片 -->
+    <div class="grid-cards">
+
+        <!-- 用途卡片 1：功能与模拟方向 -->
+        <div class="card">
+            <div class="card-title">🎯 功能侧写</div>
+            <div class="card-text">
+                <p>pg模拟器 在模拟环境中提供了接近实机的操作逻辑，适合用来快速验证想法、记录配置以及做轻量级的运行测试。
+                它并非仿真器，而是一套经过整理的调用与表现层，让使用者不必启动全套环境就能获得核心反馈。</p>
+                <p style="margin-top: 0.8rem;">对于需要反复调整参数或比对输出的人来说，这种索引式模拟能节省大量等待时间。</p>
+            </div>
+        </div>
+
+        <!-- 用途卡片 2：典型应用场景 -->
+        <div class="card">
+            <div class="card-title">🧰 应用场景</div>
+            <div class="card-text">
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="margin-bottom: 0.5rem;">✓ 快速原型演示 —— 在无实体设备时模拟交互流程</li>
+                    <li style="margin-bottom: 0.5rem;">✓ 教学与资料整理 —— 截取界面、梳理操作逻辑</li>
+                    <li style="margin-bottom: 0.5rem;">✓ 配置存档与回溯 —— 保存模拟状态便于对比</li>
+                    <li style="margin-bottom: 0.5rem;">✓ 轻量预研 —— 在正式部署前做逻辑走读</li>
+                </ul>
+                <div class="spacer"></div>
+                <p>这些场景都指向同一个需求：<strong>快速的、有结构的资料索引</strong>，而非单纯追求性能。</p>
+            </div>
+        </div>
+
+        <!-- 适合人群卡片 -->
+        <div class="card">
+            <div class="card-title">👤 适合人群</div>
+            <div class="card-text">
+                <p>对信息组织有偏好的研究者、文档撰写者、早期方案设计人员，以及希望在不搭建完整环境的前提下先行了解功能的爱好者。
+                尤其适合那些习惯通过分层笔记或卡片索引来构建知识体系的人。</p>
+                <p style="margin-top: 0.8rem;">如果你正在寻找一个能快速进入模拟状态、且不依赖复杂安装的入口，那么不妨将
+                <a href="https://mobi-pgelectronic.com">pg模拟器</a> 加入你的索引清单。
+                它提供了一组可复用的模拟表现，用来辅助你的整理工作。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自然链接段落 + 承接内容 -->
+    <div class="card" style="margin: 1.8rem 0;">
+        <div class="card-title">📎 索引笔记 · 承接说明</div>
+        <div class="card-text">
+            <p>上述卡片分别从功能、场景、受众三个方向拆解了 pg模拟器 的轮廓。接下来可以围绕这些卡片做横向对比：例如在功能侧写里提到“轻量运行测试”，在应用场景里对应为“快速原型演示”，而适合人群则指向那些需要反复迭代资料的整理者。</p>
+            <p style="margin-top: 0.9rem;">如果你希望进一步查阅该模拟器的具体页面与操作环境，可直接访问
+            <a href="https://mobi-pgelectronic.com">pg模拟器</a> 的站点。该页面本身也是信息索引的一个节点，供你按需取用。</p>
+            <p style="margin-top: 0.9rem;">另外，按照资料整理的习惯，建议在使用前快速浏览页面结构，形成自己的心智卡片。
+            这种索引式浏览能减少信息过载，尤其适合需要并行处理多项资料的人。</p>
+        </div>
+        <!-- 装饰性的按钮感链接（非必需，但体现圆角按钮风格） -->
+        <div style="margin-top: 1.6rem; display: flex; flex-wrap: wrap; gap: 0.6rem;">
+            <span class="btn-link">📌 记录卡片</span>
+            <span class="btn-link">📂 场景归档</span>
+            <span class="btn-link">🔖 受众标签</span>
+        </div>
+    </div>
+
+    <!-- FAQ 摘要风格 + 提示 -->
+    <div class="card" style="margin-bottom: 1.8rem;">
+        <div class="card-title">❓ 常见索引问题（FAQ 摘要）</div>
+        <div class="card-text" style="display: flex; flex-direction: column; gap: 0.7rem;">
+            <div><strong>Q：</strong>pg模拟器 是否需要安装额外驱动？<br>
+            <span style="color: #5d4739;">A：通常不需要。该模拟器在浏览器环境中即可运行大部分核心表现，但具体依赖以站点说明为准。</span></div>
+            <div><strong>Q：</strong>模拟结果是否可以导出为资料？<br>
+            <span style="color: #5d4739;">A：可以。页面内提供基本的导出与截图功能，适合纳入你的索引笔记。</span></div>
+            <div><strong>Q：</strong>为什么强调“资料整理”视角？<br>
+            <span style="color: #5d4739;">A：因为很多使用者并非单纯娱乐，而是把模拟器当作信息收集与验证的工具，卡片式索引更符合这类需求。</span></div>
+        </div>
+        <div style="margin-top: 1.2rem; border-top: 1px solid #eddccf; padding-top: 0.8rem; font-size: 0.95rem;">
+            💡 提示：如果希望深入某个卡片方向，可以直接在 <a href="https://mobi-pgelectronic.com" style="border-bottom: 1px dashed #a5724d;">pg模拟器</a> 页面里寻找对应模块。
+        </div>
+    </div>
+
+    <!-- 底注 自然链接已嵌入 -->
+    <div class="footnote">
+        ⚡ 本页为信息卡片式索引 · 内容基于资料整理视角 · 主参考：<a href="https://mobi-pgelectronic.com">pg模拟器</a>
+    </div>
+
+</div>
+</body>
+</html>
